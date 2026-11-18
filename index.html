@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pinoy Henyo - Fixed 5-Word Jackpot Edition</title>
+  
+  <!-- Google Fonts & Confetti Library -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700;900&family=Outfit:wght@800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --card-bg: #ffffff;
+      --yellow: #fbbf24;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Fredoka', sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+      justify-content: center;
+    }
+
+    /* Top Tournament Header Bar */
+    .header-bar {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px 20px;
+      border-radius: 50px;
+      margin-bottom: 15px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .round-title {
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--yellow);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .team-badge {
+      background: var(--purple);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      border: 2px solid #fff;
+    }
+
+    /* Main Layout */
+    .game-container {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      position: relative;
+    }
+
+    .main-stage {
+      flex: 1;
+      background: var(--card-bg);
+      border-radius: 32px;
+      padding: 25px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+      border: 4px solid #000;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ⏱️ GIANT TIMER DISPLAY */
+    .timer-section {
+      width: 100%;
+      background: #0f172a;
+      border-radius: 24px;
+      padding: 15px 0;
+      text-align: center;
+      border: 4px solid #000;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+      margin-bottom: 15px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .timer-label {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 700;
+    }
+
+    .timer-clock {
+      font-family: 'Outfit', sans-serif;
+      font-size: 6rem;
+      font-weight: 900;
+      color: var(--yellow);
+      line-height: 1;
+      text-shadow: 0 0 25px rgba(251, 191, 36, 0.4);
+    }
+
+    .timer-section.warning {
+      border-color: #f59e0b;
+    }
+
+    .timer-clock.critical {
+      color: var(--red);
+      animation: panicPulse 0.35s infinite alternate;
+      text-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+    }
+
+    @keyframes panicPulse {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+
+    /* 🔤 GIANT WORD DISPLAY */
+    .word-section {
+      width: 100%;
+      background: #fef08a;
+      border: 4px solid #000;
+      border-radius: 24px;
+      padding: 45px 20px;
+      text-align: center;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      box-shadow: 0 8px 0 #000;
+    }
+
+    .category-tag {
+      position: absolute;
+      top: -16px;
+      background: var(--blue);
+      color: #fff;
+      border: 3px solid #000;
+      padding: 4px 20px;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .word-text {
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: #0f172a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+
+    .blur-word {
+      filter: blur(18px);
+      opacity: 0.15;
+    }
+
+    .final-counter {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--purple);
+      margin-top: 10px;
+    }
+
+    /* 🔘 SIDE CONTROL TOOLBAR */
+    .side-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 12px;
+      border-radius: 30px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    .icon-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 3px solid #000;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      box-shadow: 0 4px 0 #000;
+      transition: all 0.15s ease;
+      opacity: 0.85;
+      position: relative;
+    }
+
+    .icon-btn:hover:not(:disabled) {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .icon-btn:active:not(:disabled) {
+      transform: scale(0.95);
+      box-shadow: 0 1px 0 #000;
+    }
+
+    .icon-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      filter: grayscale(1);
+      transform: none !important;
+      box-shadow: 0 4px 0 #000 !important;
+    }
+
+    .btn-start { background: var(--yellow); color: #000; }
+    .btn-tama { background: var(--green); }
+    .btn-penalty { background: var(--red); }
+    .btn-pass { background: var(--blue); }
+    .btn-peek { background: #64748b; }
+
+    .icon-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      right: 60px;
+      background: #000;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .icon-btn:hover::after { opacity: 1; }
+
+    .penalty-pop {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      color: var(--red);
+      font-size: 2.5rem;
+      font-weight: 900;
+      animation: popUp 0.8s forwards;
+      pointer-events: none;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    @keyframes popUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-35px); }
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-box {
+      background: #fff;
+      border: 4px solid #000;
+      border-radius: 28px;
+      padding: 25px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      color: #0f172a;
+      box-shadow: 0 12px 0 #000;
+    }
+
+    .modal-box h2 {
+      font-size: 1.8rem;
+      color: var(--purple);
+      margin-bottom: 10px;
+    }
+
+    .modal-box p {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #475569;
+    }
+
+    .modal-btn {
+      background: var(--yellow);
+      color: #000;
+      font-size: 1.1rem;
+      padding: 12px 24px;
+      border-radius: 16px;
+      border: 3px solid #000;
+      box-shadow: 0 4px 0 #000;
+      font-weight: 900;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .game-container { flex-direction: column; }
+      .side-toolbar { flex-direction: row; width: 100%; justify-content: center; }
+      .timer-clock { font-size: 4.5rem; }
+      .word-text { font-size: 2.2rem; }
+      .icon-btn::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Bar -->
+  <div class="header-bar">
+    <div class="round-title" id="round-indicator">ROUND 1: ELIMINATION</div>
+    <div class="team-badge" id="team-indicator">TEAM 1 TURN</div>
+  </div>
+
+  <div class="game-container">
+    <div class="main-stage">
+
+      <!-- ⏱️ GIANT TIMER -->
+      <div class="timer-section" id="timer-card">
+        <div class="timer-label">NATITIRANG ORAS</div>
+        <div class="timer-clock" id="timer-display">01:00</div>
+      </div>
+
+      <!-- 🔤 GIANT WORD CARD -->
+      <div class="word-section">
+        <div class="category-tag" id="category-tag">KATEGORYA</div>
+        <div class="word-text" id="word-display">READY</div>
+        <div class="final-counter" id="final-counter" style="display: none;">MGA HULA: 0 / 5</div>
+      </div>
+
+    </div>
+
+    <!-- 🔘 SUBTLE SIDE CONTROL TOOLBAR -->
+    <div class="side-toolbar">
+      <button class="icon-btn btn-start" id="start-btn" data-tooltip="Simulan Turn" onclick="startCurrentTurn()">▶️</button>
+      <button class="icon-btn btn-tama" id="correct-btn" data-tooltip="Tama!" onclick="handleCorrect()" disabled>✅</button>
+      <button class="icon-btn btn-penalty" id="penalty-btn" data-tooltip="Penalty (-3s)" onclick="applyPenalty()" disabled>❌</button>
+      <button class="icon-btn btn-pass" id="pass-btn" data-tooltip="Pass / Ikot" onclick="handlePass()" disabled>⏭️</button>
+      <button class="icon-btn btn-peek" id="peek-btn" data-tooltip="Itago/Ipakita" onclick="togglePeek()" style="display: none;">👁️</button>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-box">
+      <h2 id="modal-title">ROUND RESULT</h2>
+      <p id="modal-body">Description here...</p>
+      <button class="modal-btn" onclick="closeModal()">ITULOY ANG LARO ➡️</button>
+    </div>
+  </div>
+
+  <script>
+    // 500 Word Bank Database
+    const WORD_DATABASE = [
+      {"word": "Jose Rizal", "category": "TAO"}, {"word": "Andres Bonifacio", "category": "TAO"},
+      {"word": "Apolinario Mabini", "category": "TAO"}, {"word": "Melchora Aquino", "category": "TAO"},
+      {"word": "Juan Luna", "category": "TAO"}, {"word": "Emilio Aguinaldo", "category": "TAO"},
+      {"word": "Gabriela Silang", "category": "TAO"}, {"word": "Manuel L. Quezon", "category": "TAO"},
+      {"word": "Manny Pacquiao", "category": "TAO"}, {"word": "Vice Ganda", "category": "TAO"},
+      {"word": "Kathryn Bernardo", "category": "TAO"}, {"word": "Coco Martin", "category": "TAO"},
+      {"word": "Anne Curtis", "category": "TAO"}, {"word": "Liza Soberano", "category": "TAO"},
+      {"word": "Alden Richards", "category": "TAO"}, {"word": "Sarah Geronimo", "category": "TAO"},
+      {"word": "Carlos Yulo", "category": "TAO"}, {"word": "Hidilyn Diaz", "category": "TAO"},
+      {"word": "Guro", "category": "TAO"}, {"word": "Doktor", "category": "TAO"},
+      {"word": "Pulis", "category": "TAO"}, {"word": "Bumbero", "category": "TAO"},
+
+      {"word": "Tsinelas", "category": "BAGAY"}, {"word": "Sapatos", "category": "BAGAY"},
+      {"word": "Payong", "category": "BAGAY"}, {"word": "Bag", "category": "BAGAY"},
+      {"word": "Sombrero", "category": "BAGAY"}, {"word": "Relo", "category": "BAGAY"},
+      {"word": "Lapis", "category": "BAGAY"}, {"word": "Gunting", "category": "BAGAY"},
+      {"word": "Kutsara", "category": "BAGAY"}, {"word": "Plato", "category": "BAGAY"},
+      {"word": "Ref", "category": "BAGAY"}, {"word": "Sabon", "category": "BAGAY"},
+
+      {"word": "Kalabaw", "category": "HAYOP"}, {"word": "Baka", "category": "HAYOP"},
+      {"word": "Kambing", "category": "HAYOP"}, {"word": "Manok", "category": "HAYOP"},
+      {"word": "Agila", "category": "HAYOP"}, {"word": "Kabayo", "category": "HAYOP"},
+      {"word": "Elepante", "category": "HAYOP"}, {"word": "Liyon", "category": "HAYOP"},
+
+      {"word": "Adobo", "category": "PAGKAIN"}, {"word": "Sinigang", "category": "PAGKAIN"},
+      {"word": "Lechon", "category": "PAGKAIN"}, {"word": "Kare-Kare", "category": "PAGKAIN"},
+      {"word": "Crispy Pata", "category": "PAGKAIN"}, {"word": "Sisig", "category": "PAGKAIN"},
+      {"word": "Halo-halo", "category": "PAGKAIN"}, {"word": "Balut", "category": "PAGKAIN"},
+
+      {"word": "Boracay", "category": "LUGAR"}, {"word": "Palawan", "category": "LUGAR"},
+      {"word": "Baguio", "category": "LUGAR"}, {"word": "Siargao", "category": "LUGAR"},
+      {"word": "Mayon Volcano", "category": "LUGAR"}, {"word": "Taal Volcano", "category": "LUGAR"}
+    ];
+
+    // Engine State
+    let shuffledWords = [];
+    let currentWordIndex = 0;
+    
+    // Jackpot Round Specific 5-Word Pool
+    let jackpotWordsPool = [];
+    let jackpotIndex = 0;
+
+    let currentRound = 1;
+    let round1Results = [
+      { name: "Team 1", timeUsed: 999, success: false },
+      { name: "Team 2", timeUsed: 999, success: false },
+      { name: "Team 3", timeUsed: 999, success: false }
+    ];
+    let currentTeamIdx = 0;
+    let round2Teams = [];
+    let winningTeam = null;
+
+    let finalWordsGuessed = 0;
+    let timeRemaining = 60;
+    let timerInterval = null;
+    let gameActive = false;
+    let isBlurred = false;
+
+    // Web Audio Synthesizer
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playPressureTick(secs) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+
+      if (secs > 15) {
+        playClickSound(now, 800);
+      } else if (secs > 5) {
+        playClickSound(now, 1000 + (15 - secs) * 50);
+        playHeartbeatThump(now);
+      } else if (secs > 0) {
+        playClickSound(now, 1600 + (5 - secs) * 120);
+        playAlarmBeep(now, 900 + (5 - secs) * 100);
+        playHeartbeatThump(now);
+
+        setTimeout(() => {
+          if (gameActive) {
+            playHeartbeatThump(audioCtx.currentTime);
+            playClickSound(audioCtx.currentTime, 1800);
+          }
+        }, 200);
+      }
+    }
+
+    function playClickSound(now, freq) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(120, now + 0.04);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    }
+
+    function playHeartbeatThump(now) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(130, now);
+      osc.frequency.exponentialRampToValueAtTime(25, now + 0.12);
+      gain.gain.setValueAtTime(0.5, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.14);
+    }
+
+    function playAlarmBeep(now, freq) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    }
+
+    function playActionSFX(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.1);
+        osc.frequency.setValueAtTime(783.99, now + 0.2);
+        gain.gain.setValueAtTime(0.25, now);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'penalty' || type === 'timeout') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(280, now);
+        osc.frequency.setValueAtTime(110, now + 0.15);
+        gain.gain.setValueAtTime(0.3, now);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      }
+    }
+
+    // Initialize & Randomize Word Bank on Web App Load
+    function initGame() {
+      shuffledWords = [...WORD_DATABASE].sort(() => Math.random() - 0.5);
+      currentWordIndex = 0;
+      currentRound = 1;
+      currentTeamIdx = 0;
+      updateHeaderDisplays();
+    }
+
+    function updateHeaderDisplays() {
+      const roundLabel = document.getElementById('round-indicator');
+      const teamLabel = document.getElementById('team-indicator');
+      const finalCounter = document.getElementById('final-counter');
+
+      if (currentRound === 1) {
+        roundLabel.textContent = "ROUND 1: ELIMINATION (1 WORD)";
+        teamLabel.textContent = `${round1Results[currentTeamIdx].name} TURN`;
+        finalCounter.style.display = 'none';
+        timeRemaining = 60;
+      } else if (currentRound === 2) {
+        roundLabel.textContent = "ROUND 2: REDEMPTION";
+        teamLabel.textContent = `${round2Teams[currentTeamIdx].name} TURN`;
+        finalCounter.style.display = 'none';
+        timeRemaining = 60;
+      } else if (currentRound === 3) {
+        roundLabel.textContent = "FINAL ROUND: JACKPOT (FIXED 5 WORDS)";
+        teamLabel.textContent = `WINNER: ${winningTeam.name}`;
+        finalCounter.style.display = 'block';
+        finalCounter.textContent = `MGA HULA: ${finalWordsGuessed} / 5`;
+        timeRemaining = 180;
+      }
+
+      updateClockDisplay();
+    }
+
+    function updateClockDisplay() {
+      const clock = document.getElementById('timer-display');
+      const timerCard = document.getElementById('timer-card');
+      const mins = Math.floor(timeRemaining / 60);
+      const secs = timeRemaining % 60;
+
+      clock.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      if (timeRemaining <= 5 && gameActive) {
+        clock.classList.add('critical');
+        timerCard.classList.remove('warning');
+      } else if (timeRemaining <= 15 && gameActive) {
+        timerCard.classList.add('warning');
+        clock.classList.remove('critical');
+      } else {
+        clock.classList.remove('critical');
+        timerCard.classList.remove('warning');
+      }
+    }
+
+    function startCurrentTurn() {
+      gameActive = true;
+      document.getElementById('start-btn').disabled = true;
+      document.getElementById('correct-btn').disabled = false;
+      document.getElementById('penalty-btn').disabled = false;
+      document.getElementById('pass-btn').disabled = false;
+      document.getElementById('peek-btn').style.display = 'flex';
+
+      if (currentRound === 3) {
+        finalWordsGuessed = 0;
+        timeRemaining = 180;
+        
+        // Pick exactly 5 words for the Jackpot Round pool upfront
+        prepareJackpotPool();
+        displayCurrentJackpotWord();
+      } else {
+        timeRemaining = 60;
+        showNextSingleWord();
+      }
+
+      updateClockDisplay();
+
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        updateClockDisplay();
+
+        if (gameActive && timeRemaining >= 0) {
+          playPressureTick(timeRemaining);
+        }
+
+        if (timeRemaining <= 0) {
+          handleTimeOut();
+        }
+      }, 1000);
+    }
+
+    // Prepare exactly 5 selected words for Jackpot Round
+    function prepareJackpotPool() {
+      jackpotWordsPool = [];
+      for (let i = 0; i < 5; i++) {
+        if (currentWordIndex >= shuffledWords.length) {
+          shuffledWords = [...WORD_DATABASE].sort(() => Math.random() - 0.5);
+          currentWordIndex = 0;
+        }
+        jackpotWordsPool.push({
+          word: shuffledWords[currentWordIndex].word,
+          category: shuffledWords[currentWordIndex].category,
+          guessed: false
+        });
+        currentWordIndex++;
+      }
+      jackpotIndex = 0;
+    }
+
+    function displayCurrentJackpotWord() {
+      if (!jackpotWordsPool[jackpotIndex]) return;
+      const item = jackpotWordsPool[jackpotIndex];
+      document.getElementById('word-display').textContent = item.word;
+      document.getElementById('category-tag').textContent = `🏷️ ${item.category}`;
+    }
+
+    // Cycle strictly within the 5 Jackpot Words (Looping to un-guessed ones)
+    function advanceJackpotPool() {
+      const remainingUnanswered = jackpotWordsPool.filter(w => !w.guessed);
+      if (remainingUnanswered.length === 0) return;
+
+      let loopCount = 0;
+      do {
+        jackpotIndex = (jackpotIndex + 1) % jackpotWordsPool.length;
+        loopCount++;
+      } while (jackpotWordsPool[jackpotIndex].guessed && loopCount < 10);
+
+      displayCurrentJackpotWord();
+    }
+
+    // For Round 1 & 2
+    function showNextSingleWord() {
+      if (currentWordIndex >= shuffledWords.length) {
+        shuffledWords = [...WORD_DATABASE].sort(() => Math.random() - 0.5);
+        currentWordIndex = 0;
+      }
+
+      const item = shuffledWords[currentWordIndex];
+      document.getElementById('word-display').textContent = item.word;
+      document.getElementById('category-tag').textContent = `🏷️ ${item.category}`;
+      currentWordIndex++;
+    }
+
+    function handleCorrect() {
+      if (!gameActive) return;
+      playActionSFX('correct');
+
+      if (currentRound === 1) {
+        const timeSpent = 60 - timeRemaining;
+        round1Results[currentTeamIdx].timeUsed = timeSpent;
+        round1Results[currentTeamIdx].success = true;
+        endTurnSuccess();
+      } else if (currentRound === 2) {
+        const timeSpent = 60 - timeRemaining;
+        round2Teams[currentTeamIdx].timeUsed = timeSpent;
+        round2Teams[currentTeamIdx].success = true;
+        endRound2Turn();
+      } else if (currentRound === 3) {
+        // Mark current word as guessed
+        jackpotWordsPool[jackpotIndex].guessed = true;
+        finalWordsGuessed++;
+        document.getElementById('final-counter').textContent = `MGA HULA: ${finalWordsGuessed} / 5`;
+
+        if (finalWordsGuessed >= 5) {
+          clearInterval(timerInterval);
+          gameActive = false;
+          if (window.confetti) {
+            confetti({ particleCount: 250, spread: 100, origin: { y: 0.5 } });
+          }
+          showModal("🏆 CHAMPION!", `🎉 CONGRATULATIONS! Nahulaan ng ${winningTeam.name} ang LAHAT ng 5 WORDS bago maubos ang oras!`);
+        } else {
+          // Loop to next un-guessed word in the 5-word pool
+          advanceJackpotPool();
+        }
+      }
+    }
+
+    function handlePass() {
+      if (!gameActive) return;
+      playActionSFX('penalty');
+      
+      if (currentRound === 3) {
+        // In Jackpot Round, PASS simply rotates/loops to the next un-guessed word among the 5!
+        advanceJackpotPool();
+      } else {
+        handleTimeOut();
+      }
+    }
+
+    function applyPenalty() {
+      if (!gameActive) return;
+      playActionSFX('penalty');
+
+      timeRemaining = Math.max(0, timeRemaining - 3);
+      updateClockDisplay();
+
+      const card = document.getElementById('timer-card');
+      const pop = document.createElement('div');
+      pop.className = 'penalty-pop';
+      pop.textContent = '-3s ⏱️';
+      card.appendChild(pop);
+      setTimeout(() => pop.remove(), 800);
+
+      if (timeRemaining <= 0) {
+        handleTimeOut();
+      }
+    }
+
+    function handleTimeOut() {
+      clearInterval(timerInterval);
+      gameActive = false;
+      playActionSFX('timeout');
+
+      if (currentRound === 1) {
+        round1Results[currentTeamIdx].timeUsed = 999;
+        round1Results[currentTeamIdx].success = false;
+        endTurnSuccess();
+      } else if (currentRound === 2) {
+        round2Teams[currentTeamIdx].timeUsed = 999;
+        round2Teams[currentTeamIdx].success = false;
+        endRound2Turn();
+      } else if (currentRound === 3) {
+        showModal("⏱️ TIME'S UP!", `Naubos na ang 3 minuto! Nahulaan ng ${winningTeam.name}: ${finalWordsGuessed} / 5 words.`);
+      }
+    }
+
+    function endTurnSuccess() {
+      clearInterval(timerInterval);
+      gameActive = false;
+
+      if (currentTeamIdx < 2) {
+        showModal(`ROUND 1: ${round1Results[currentTeamIdx].name} FINISHED`, 
+          `Isunod naman natin ang ${round1Results[currentTeamIdx + 1].name}!`);
+        currentTeamIdx++;
+      } else {
+        round1Results.sort((a, b) => a.timeUsed - b.timeUsed);
+        round2Teams = round1Results.slice(1);
+        winningTeam = round1Results[0];
+
+        showModal("ROUND 1 TAPOS NA!", 
+          `🥇 Rank 1: ${round1Results[0].name} (${round1Results[0].success ? round1Results[0].timeUsed + 's' : 'Failed'})\n\n` +
+          `⚠️ Papasok sa ROUND 2: ${round2Teams.map(t => t.name).join(' at ')}!`);
+        
+        currentRound = 2;
+        currentTeamIdx = 0;
+      }
+      resetTurnButtons();
+      updateHeaderDisplays();
+    }
+
+    function endRound2Turn() {
+      clearInterval(timerInterval);
+      gameActive = false;
+
+      if (currentTeamIdx < round2Teams.length - 1) {
+        showModal(`ROUND 2: ${round2Teams[currentTeamIdx].name} FINISHED`, `Susunod na ang ${round2Teams[currentTeamIdx + 1].name}!`);
+        currentTeamIdx++;
+      } else {
+        round2Teams.sort((a, b) => a.timeUsed - b.timeUsed);
+        winningTeam = round2Teams[0];
+
+        showModal("🎉 ROUND 2 WINNER!", 
+          `Ang nagwagi sa Round 2 ay ang ${winningTeam.name}! Sila ang papasok sa FINAL ROUND para sa 5 WORDS / 3 MINUTES!`);
+        
+        currentRound = 3;
+      }
+      resetTurnButtons();
+      updateHeaderDisplays();
+    }
+
+    function resetTurnButtons() {
+      document.getElementById('start-btn').disabled = false;
+      document.getElementById('correct-btn').disabled = true;
+      document.getElementById('penalty-btn').disabled = true;
+      document.getElementById('pass-btn').disabled = true;
+      document.getElementById('peek-btn').style.display = 'none';
+      document.getElementById('word-display').classList.remove('blur-word');
+      document.getElementById('word-display').textContent = 'READY';
+      document.getElementById('timer-card').classList.remove('warning');
+      document.getElementById('timer-display').classList.remove('critical');
+    }
+
+    function togglePeek() {
+      const wordElem = document.getElementById('word-display');
+      isBlurred = !isBlurred;
+      if (isBlurred) {
+        wordElem.classList.add('blur-word');
+      } else {
+        wordElem.classList.remove('blur-word');
+      }
+    }
+
+    function showModal(title, body) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').innerText = body;
+      document.getElementById('modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+      if (currentRound === 3 && !gameActive && finalWordsGuessed >= 5) {
+        initGame();
+      }
+    }
+
+    // Start App
+    initGame();
+  </script>
+</body>
+</html>
